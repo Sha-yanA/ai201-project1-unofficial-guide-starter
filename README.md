@@ -67,9 +67,9 @@ UF campus dining experiences: student opinions and first-hand accounts about din
      Consider: context length limits, multilingual support, accuracy on domain-specific text,
      latency, and local vs. API-hosted. -->
 
-**Model used:**
+**Model used:** `all-MiniLM-L6-v2` via `sentence-transformers`, running locally. Produces 384-dimensional vectors. Chosen because it requires no API key, has no rate limits, and its 256-token input ceiling comfortably covers our 500-character chunks (roughly 125 tokens).
 
-**Production tradeoff reflection:**
+**Production tradeoff reflection:** The main tradeoffs for a real deployment are context length, accuracy, and hosting cost. `all-MiniLM-L6-v2` caps at 256 tokens, which is fine for short reviews but would truncate longer documents in a different domain. OpenAI's `text-embedding-3-small` handles up to 8k tokens and scores higher on semantic benchmarks, but adds per-call API cost, latency, and an external dependency. A multilingual model like `multilingual-e5-large` would handle non-English content (a few reviews in this corpus are in Chinese) but is significantly larger and slower to run locally. For this project the local, zero-cost model is the right tradeoff; in production I would move to an API-hosted model with longer context for better recall on complex queries.
 
 ---
 

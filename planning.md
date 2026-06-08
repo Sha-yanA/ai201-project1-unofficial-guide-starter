@@ -72,11 +72,11 @@ flowchart LR
      would you weigh in choosing a different embedding model — context length, multilingual
      support, accuracy on domain-specific text, latency? -->
 
-**Embedding model:**
+**Embedding model:** `all-MiniLM-L6-v2` via `sentence-transformers`. Runs locally with no API key and no rate limits. Produces 384-dimensional vectors and has a 256-token input limit (~1000 characters), which fits comfortably within our 500-character chunk ceiling.
 
-**Top-k:**
+**Top-k:** 5. At k=4 the risk is that the one chunk containing the specific fact a user needs is missed entirely. At k=5 there is still enough signal for the LLM to produce a grounded answer without excessive noise from loosely related chunks. Will tune down to 4 if generation responses become too diluted.
 
-**Production tradeoff reflection:**
+**Production tradeoff reflection:** For a production system the main tradeoffs are context length, accuracy, and hosting cost. `all-MiniLM-L6-v2` caps at 256 tokens, which is fine for short reviews but would truncate longer documents. OpenAI's `text-embedding-3-small` supports 8k tokens and tends to score higher on semantic benchmarks, but adds per-call API cost, latency, and a hard dependency on an external service. `multilingual-e5-large` would handle non-English reviews (some Yelp reviews in this corpus are in Chinese) but is significantly larger and slower to run locally. For this project the local, zero-cost model is the right tradeoff; in production I would switch to an API-hosted model with longer context for better recall on multi-sentence queries.
 
 ---
 
@@ -89,11 +89,11 @@ flowchart LR
 
 | # | Question | Expected answer |
 |---|----------|-----------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | What do students say about food quality at Gator Corner compared to Broward? | Gator Corner is generally rated higher. Multiple Restaurantji reviews say it is decent and consistent; one student directly states "Gator Corner is 100 times better than Broward Dining." Post-renovation (Aug 2024), another student says he now prefers The Eatery at Broward over Gator Corner. |
+| 2 | Are there vegan options at UF dining halls, and how do students rate them? | All dining halls offer vegan options, but students find them limited. Cravings Campus Kitchen has no vegan dessert. The Alligator (Jan 2024) quotes a freshman saying options are "frequently limited to meager portions." Gator Corner has a dedicated vegan/allergen section. Staff said they are actively adding more plant-based dishes. |
+| 3 | How much does a UF meal plan cost and is it worth buying? | Residential plans range from $1,120 (Upperclassman 125) to $3,150 (Super Gator) per semester. Multiple Reddit r/ufl users advise against buying a plan: "I highly recommend no one ever get a meal plan… you will end up losing money in the long run. Just pay as you go." |
+| 4 | What food options are available at the Reitz Union? | Panda Express, Starbucks, Halal Shack, Baba's Pizza, Subway, and Mi Apa are mentioned by Wanderlog reviewers. Outdoor seating overlooks a pond; free student printing also available. One reviewer calls Mi Apa and Panda Express their favorites. |
+| 5 | Where can UF students find food after midnight? | Reddit r/ufl thread lists: Taco Bell on Archer (~3 am), Checkers on University Ave (until 5 am), McDonald's on Archer (24/7, breakfast at 4 am), Gumby's Pizza (~3 am), Wawa (always open), and Flaco's Tacos downtown (open late most nights). |
 
 ---
 
@@ -103,19 +103,9 @@ flowchart LR
      Consider: noisy or inconsistent documents, missing source attribution, off-topic
      retrieval, chunks that split key information across boundaries. -->
 
-1.
+1. **Outdated reviews mixed with current ones.** Broward underwent a full renovation and reopened as "The Eatery @ Broward Hall" in August 2024. Reviews in this corpus span 2011–2025, so pre-renovation complaints (raw chicken, recycled leftovers, dirty utensils) will be retrieved at equal weight alongside post-renovation praise. The embedding model has no date awareness, meaning a query like "is Broward worth going to?" could surface a 2017 one-star rant as the top result even though that dining hall no longer exists in its old form.
 
-2.
-
----
-
-## Architecture
-
-<!-- Draw a diagram of your pipeline showing the five stages:
-     Document Ingestion → Chunking → Embedding + Vector Store → Retrieval → Generation
-     Label each stage with the tool or library you're using.
-     You can use ASCII art, a Mermaid diagram, or embed a sketch as an image.
-     You'll use this diagram as context when prompting AI tools to implement each stage. -->
+2. **Off-topic retrieval on vague queries.** The food-budgeting Reddit thread (doc 11) and the late-night thread (doc 12) discuss grocery shopping, cooking at home, and restaurants several miles from campus. A query like "how do I eat cheaply at UF?" may retrieve chunks about Trader Joe's or Sam's Club rather than on-campus dining, because the embedding similarity between "eating cheaply at UF" and a comment about $200/month grocery budgets is high even though the chunk does not answer the question in the intended domain.
 
 ---
 
@@ -132,7 +122,10 @@ flowchart LR
      with my specified chunk size and overlap" is a plan. -->
 
 **Milestone 3 — Ingestion and chunking:**
+I gave Claude the Documents section and Chunking Strategy section from this file plus sample raw `.txt` files from each source type (Yelp, Alligator, Reddit). I asked it to implement `ingest.py` (per-source noise filtering and unit extraction) and `chunk.py` (sentence-boundary splitting at 400–500 chars with 50-char overlap). I verified the output by running `chunk.py` and confirming: 332 chunks, max 500 chars, avg 224 chars, no empty strings, and that metadata (source/location/url) is attached to every chunk.
 
 **Milestone 4 — Embedding and retrieval:**
+I will give Claude this Retrieval Approach section and the architecture diagram and ask it to implement `embed.py`. Input to Claude: the chunk list produced by `chunk_units()` (dicts with `text`, `source`, `location`, `url`, `doc_type`, `filename`), the model name `all-MiniLM-L6-v2`, and the ChromaDB collection schema. Expected output: a script that loads chunks, generates embeddings locally, stores them in a persistent ChromaDB collection with all metadata fields, and exposes a `retrieve(query, k=5)` function returning the top-k chunks with distance scores. I will verify by running each of the 5 evaluation questions and checking that the top results are on-topic and cite the correct source.
 
 **Milestone 5 — Generation and interface:**
+I will give Claude the Grounded Generation section from README.md (once written) and ask it to implement `generate.py` using the Groq `llama-3.3-70b-versatile` model. I will provide the exact system prompt I want and the retrieval context format. I will verify that responses cite specific sources and that the model refuses to answer questions with no supporting chunks in the retrieved context.

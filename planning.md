@@ -1,7 +1,7 @@
 # Project 1 Planning: The Unofficial Guide
 
 > Write this document before you write any pipeline code.
-> Your spec and architecture diagram are what you'll use to direct AI tools (Claude, Copilot, etc.) to generate your implementation — the more specific they are, the more useful the generated code will be.
+> Your spec and architecture diagram are what you'll use to direct AI tools (Claude, Copilot, etc.) to generate your implementation - the more specific they are, the more useful the generated code will be.
 > Update the Retrieval Approach and Chunking Strategy sections if you change your approach during implementation.
 > Update this file before starting any stretch features.
 
@@ -69,7 +69,7 @@ flowchart LR
 <!-- Which embedding model are you using (e.g., all-MiniLM-L6-v2 via sentence-transformers)?
      How many chunks will you retrieve per query (top-k)?
      If you were deploying this for real users and cost wasn't a constraint, what tradeoffs
-     would you weigh in choosing a different embedding model — context length, multilingual
+     would you weigh in choosing a different embedding model - context length, multilingual
      support, accuracy on domain-specific text, latency? -->
 
 **Embedding model:** `all-MiniLM-L6-v2` via `sentence-transformers`. Runs locally with no API key and no rate limits. Produces 384-dimensional vectors and has a 256-token input limit (~1000 characters), which fits comfortably within our 500-character chunk ceiling.
@@ -121,11 +121,11 @@ flowchart LR
      "I'll give Claude my Chunking Strategy section and ask it to implement chunk_text()
      with my specified chunk size and overlap" is a plan. -->
 
-**Milestone 3 — Ingestion and chunking:**
+**Milestone 3 - Ingestion and chunking:**
 I gave Claude the Documents section and Chunking Strategy section from this file plus sample raw `.txt` files from each source type (Yelp, Alligator, Reddit). I asked it to implement `ingest.py` (per-source noise filtering and unit extraction) and `chunk.py` (sentence-boundary splitting at 400–500 chars with 50-char overlap). I verified the output by running `chunk.py` and confirming: 332 chunks, max 500 chars, avg 224 chars, no empty strings, and that metadata (source/location/url) is attached to every chunk.
 
-**Milestone 4 — Embedding and retrieval:**
-I will give Claude this Retrieval Approach section and the architecture diagram and ask it to implement `embed.py`. Input to Claude: the chunk list produced by `chunk_units()` (dicts with `text`, `source`, `location`, `url`, `doc_type`, `filename`), the model name `all-MiniLM-L6-v2`, and the ChromaDB collection schema. Expected output: a script that loads chunks, generates embeddings locally, stores them in a persistent ChromaDB collection with all metadata fields, and exposes a `retrieve(query, k=5)` function returning the top-k chunks with distance scores. I will verify by running each of the 5 evaluation questions and checking that the top results are on-topic and cite the correct source.
+**Milestone 4 - Embedding and retrieval:**
+I gave Claude the Retrieval Approach section from this file, the pipeline architecture diagram, and the chunk dict schema produced by `chunk_units()` (`text`, `source`, `location`, `url`, `doc_type`, `filename`). I asked it to implement `embed.py` with two functions: `build_index()` (embed all 332 chunks with `all-MiniLM-L6-v2` and persist them in a ChromaDB collection with cosine similarity) and `retrieve(query, k=5)` (embed the query and return the top-k chunks with distance scores). Claude produced the full file including batched inserts, a skip-rebuild guard, and a `__main__` smoke test covering all 5 evaluation queries. I directed it to add two metadata fields not in the original spec - `chunk_index` and `chunk_total` - to satisfy the requirement that each chunk records its position within its source document. I verified by running `embed.py` and confirming 332 chunks indexed, all 5 test queries returned on-topic results with cosine distances below 0.5, and filenames in every metadata dict.
 
-**Milestone 5 — Generation and interface:**
-I will give Claude the Grounded Generation section from README.md (once written) and ask it to implement `generate.py` using the Groq `llama-3.3-70b-versatile` model. I will provide the exact system prompt I want and the retrieval context format. I will verify that responses cite specific sources and that the model refuses to answer questions with no supporting chunks in the retrieved context.
+**Milestone 5 - Generation and interface:**
+I gave Claude the Milestone 5 requirements (grounded generation, source attribution, Gradio interface), the `retrieve()` function signature from `embed.py`, and the constraint that grounding must be enforced structurally - not just suggested in a prompt. Claude produced `generate.py` with a two-layer grounding design: a distance threshold that drops irrelevant chunks before the LLM is called, and a strict system prompt that forbids the model from using training knowledge or referencing passage structure. It also produced `app.py` as a Gradio Blocks interface with an answer card, a sources table, and five example questions. I made three overrides after testing: (1) removed the `[1]`, `[2]`, `[3]` numbering from the context format because the model was citing passage numbers in its answers; (2) extended the system prompt to explicitly ban phrases like "one reviewer", "the individual", and "another perspective" after the model continued referencing passage positions by description; (3) directed Claude to append source filenames (e.g. `4_alligator_broward_renovated.txt`) to the answer card programmatically from chunk metadata, rather than relying on the LLM to cite them.

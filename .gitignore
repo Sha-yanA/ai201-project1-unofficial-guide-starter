@@ -27,3 +27,5 @@ scraped.txt
 chunks_debug.json
 units_debug.json
 display_chunks_debug.py
+app_launch.log
+app_launch_err.log

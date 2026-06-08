@@ -73,6 +73,125 @@ UF campus dining experiences: student opinions and first-hand accounts about din
 
 ---
 
+## Retrieval Test Results
+
+**Query 1: "Are there vegan options at UF dining halls?"**
+
+| Rank | Source | Location | Distance | Chunk text (first 200 chars) |
+|------|--------|----------|----------|------------------------------|
+| 1 | The Alligator | UF Dining Halls (Vegan Options) | 0.2625 | *"I'm vegan by choice, but some people are for religious, cultural reasons," she said. "I feel like [dining halls] should really just be more easily accommodated..."* |
+| 2 | The Alligator | UF Dining Halls (Vegan Options) | 0.2931 | *"All the other campus dining halls change the daily menu option once every four weeks, and there are both vegan entrees and plant-based substitutes available."* |
+| 3 | The Alligator | UF Dining Halls (Vegan Options) | 0.3321 | *"I know a lot of [vegan students] are looking for more of an entree, not just the sides, so we're trying to get there and implement more vegan options," said Marc Cruz, the district executive chef.* |
+| 4 | The Alligator | UF Dining Halls (Vegan Options) | 0.3381 | *"For vegan students like Maxine Sculthorpe, an 18-year-old UF biomedical engineering freshman, walking into a new dining hall can be intimidating because her food options are frequently limited..."* |
+| 5 | Yelp | Broward Dining Hall | 0.3394 | *"...the vegan bar has some of the best food out due to being almost forced into using higher quality ingredients. Overall, it's not a great time, but..."* |
+
+**Why these chunks are relevant:** The query contains the exact phrase "vegan options" and "dining halls," which appear verbatim in chunks 1–4. The embedding model maps "vegan" and "dining accommodations" tightly in vector space, so all five top hits come from the single Alligator article specifically about vegan students - exactly the right document. Chunk 5 (Yelp/Broward) surfaces because it mentions the vegan bar as a named physical feature of the dining hall. All distances are under 0.35, indicating strong semantic alignment with the query.
+
+---
+
+**Query 2: "What do students say about food quality at Gator Corner compared to Broward?"**
+
+| Rank | Source | Location | Distance | Chunk text (first 200 chars) |
+|------|--------|----------|----------|------------------------------|
+| 1 | Restaurantji | Gator Corner Dining Center | 0.2816 | *"I can't say enough good things about Gator Corner! Every visit feels like a treat. The food options are abundant, catering to all tastes and dietary preferences, and everything is always fresh..."* |
+| 2 | Yelp | Broward Dining Hall | 0.3370 | *"Just a quick update to my previous review since I recently ate here with a friend who is a student at UF. For what it is, which is college food, Broward is really good overall..."* |
+| 3 | The Alligator | Norman Tent Dining (Broward Renovation) | 0.3411 | *"While Dinka describes the food as hit-or-miss — sometimes tasting better than the Broward fare she ate last semester, and sometimes tasting like 'slop'..."* |
+| 4 | Yelp | Broward Dining Hall | 0.3613 | *"...the dessert station is slamming. The confections completely outperform that of Broward's vastly inferior, and barbaric cousin Gator D. Pretty good for cafeteria food."* |
+| 5 | Yelp | Broward Dining Hall | 0.3782 | *"Now, Fresh Food Company at Broward is not fancy, not at all. This is college grub, but it's very good for what it is, and the staff is very friendly..."* |
+
+**Why these chunks are relevant:** The query mentions both "Gator Corner" and "Broward" as named entities alongside the phrase "food quality." The embedding model retrieves chunks where both names co-occur or where one is contrasted with the other. Chunk 1 is the top Gator Corner review; chunks 2 and 5 are Broward reviews with explicit quality assessments. Chunk 4 is especially useful because it directly names both dining halls in the same sentence ("Broward's vastly inferior… cousin Gator D"), giving the LLM direct comparative material. Chunk 3 provides a student quote about Broward food being "hit-or-miss," which captures the divided opinion accurately.
+
+---
+
+**Query 3: "Where can UF students find food after midnight?"**
+
+| Rank | Source | Location | Distance | Chunk text (first 200 chars) |
+|------|--------|----------|----------|------------------------------|
+| 1 | The Alligator | UF Dining / Bite Club | 0.3852 | *"UF's on-campus meal plans are abundantly used by students but lack one essential feature: off-campus dining."* |
+| 2 | Reddit r/ufl | Gainesville Late-Night Dining | 0.3994 | *"Let me put you on to the late night options as I'm a night owl. You have Taco Bell on Archer which closes at like 3 am. I went the other night and it was closed around 2:30 but it usually closes at 3..."* |
+| 3 | The Alligator | Norman Tent Dining (Broward Renovation) | 0.4132 | *"Norman offers three all-you-can-eat meal stations in addition to salad, cereal and dessert bars. Students can visit seven days per week from 7 a.m. to 9 p.m. on weekdays..."* |
+| 4 | Restaurantji | Gator Corner Dining Center | 0.4274 | *"All you can eat restaurant that mostly serves UF students. The food is a hit or miss... The location always serves pizza, salad, coffee, waffles (waffle maker)..."* |
+| 5 | Yelp | Broward Dining Hall | 0.4325 | *"The Fresh Food Company is located on the UF campus at the Broward Dining complex on Inner Drive. This makes the location handy for a number of dorms..."* |
+
+---
+
+## Example Responses
+
+**Response 1 - "What food options are available at the Reitz Union?"**
+
+> The Reitz Union has a variety of food options, including Mi Apa, Panda Express, Starbucks, Halal Shack, Baba's Pizza, Subway, and a market. Additionally, there are stations for making subs, a "Fresh Mex Burrito Bar", and a selection of desserts. Some reviewers also mention being able to grab a plate of prepared dishes, such as fish with yellow rice. Overall, there are many different restaurants and eateries to choose from at the Reitz Union.
+>
+> *(1_yelp_broward_dining.txt, 9_wanderlog_reitz_union.txt)*
+
+Sources shown in the interface below the answer card:
+
+| Type | Outlet | Location | Link |
+|------|--------|----------|------|
+| Review | Yelp | Broward Dining Hall | [View source ↗](https://www.yelp.com/biz/fresh-food-company-broward-dining-gainesville) |
+| Review | Wanderlog | Reitz Union Food Court | [View source ↗](https://wanderlog.com/place/details/11039454/reitz-union) |
+
+---
+
+**Response 2 - "Are there vegan options at UF dining halls?"**
+
+> Yes, there are vegan options available at UF dining halls. Both vegan entrees and plant-based substitutes can be found, although some students feel that the options are limited and not always satisfying. The district executive chef is working to implement more vegan options, particularly entrees, to better accommodate vegan students. Additionally, some dining halls have a vegan bar with high-quality ingredients, which can offer some of the best food options.
+>
+> *(6_alligator_uf_vegan.txt, 1_yelp_broward_dining.txt)*
+
+Sources shown in the interface below the answer card:
+
+| Type | Outlet | Location | Link |
+|------|--------|----------|------|
+| Article | The Alligator | UF Dining Halls (Vegan Options) | [View source ↗](https://www.alligator.org/article/2024/01/uf-vegan-experience) |
+| Review | Yelp | Broward Dining Hall | [View source ↗](https://www.yelp.com/biz/fresh-food-company-broward-dining-gainesville) |
+
+---
+
+**Response 3 (out-of-scope) - "What is the best Italian restaurant in Gainesville?"**
+
+> I don't have enough information in my sources to answer that.
+
+The system returned the refusal because no retrieved chunk passed the cosine distance threshold of 0.70: the corpus contains no content about Italian restaurants in Gainesville, so no relevant context was surfaced and the LLM was never called. The UI renders this in a yellow warning card with the message above and a prompt to try a different question.
+
+---
+
+## Query Interface
+
+**Input field**
+
+A single multi-line text box labelled "Your question" with placeholder text *"e.g. Is the UF meal plan worth buying?"* The user types a free-form natural-language question and submits by pressing the "Ask" button or hitting Enter. Five pre-loaded example questions are shown below the input as one-click shortcuts.
+
+**Output fields**
+
+*Answer card* - an HTML panel rendered to the right of a blue left-border stripe. It shows the LLM's grounded prose answer (3–6 sentences). When the system cannot answer, it renders a yellow warning card instead. At the bottom of every successful answer, the filenames of the source documents are appended in parentheses (e.g., `(6_alligator_uf_vegan.txt, 1_yelp_broward_dining.txt)`), this attribution is programmatic, not generated by the LLM.
+
+*Sources table* - a formatted HTML table below the answer card with one row per unique source. Each row shows a colour-coded document-type badge (Review / Article / Reddit), the outlet name, the named campus location, and a "View source ↗" link opening the original URL in a new tab.
+
+**Sample interaction transcript**
+
+```
+User:    Where can UF students find food after midnight?
+
+System:  UF students have a few options for late-night food. Checkers on University
+         Avenue is open until 5am, but be prepared for long lines around 3-4am.
+         McDonald's, located on Archer Road, is open 24/7 and starts serving
+         breakfast at 4am. Taco Bell on Archer Road typically closes at 3am,
+         although hours may vary. Domino's on 13th Street is another option,
+         but it closes at 2am.
+
+         (7_alligator_mealplans_atlernative.txt, 12_reddit_late_night.txt,
+          5_alligator_broward_old.txt, 2_restarauntji_gator_corner.txt,
+          1_yelp_broward_dining.txt)
+
+Sources: [Article]  The Alligator    UF Dining / Bite Club             View source ↗
+         [Reddit]   Reddit r/ufl     Gainesville Late-Night Dining     View source ↗
+         [Article]  The Alligator    Norman Tent Dining (Broward)      View source ↗
+         [Review]   Restaurantji     Gator Corner Dining Center        View source ↗
+         [Review]   Yelp             Broward Dining Hall               View source ↗
+```
+
+---
+
 ## Grounded Generation
 
 <!-- Explain how your system enforces grounding — how does it prevent the LLM from answering

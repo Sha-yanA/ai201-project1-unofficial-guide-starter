@@ -23,7 +23,7 @@ UF campus dining experiences: student opinions and first-hand accounts about din
 | #  | Source           | Description                   | URL or Location |
 |----|------------------|-------------------------------|-----------------|
 | 1  | Yelp             | Student reviews of Broward dining hall | `https://www.yelp.com/biz/fresh-food-company-broward-dining-gainesville` |
-| 2  | Restaurantji     | Aggregated student reviews of Gator Corner | `https://www.restaurantji.com/fl/gainesville/gator-corner-dining-center/` |
+| 2  | Restaurantji     | Aggregated student reviews of Gator Corner | `https://www.restaurantji.com/fl/gainesville/gator-corner-dining-center-/` |
 | 3  | Spoon University | Student-written review of Cravings Campus Kitchen (2023) | `https://spoonuniversity.com/school/ufl/reviewing-the-new-dining-hall/`           |
 | 4  | The Alligator    | Student reactions to renovated Broward reopening (Aug 2024) | `https://www.alligator.org/article/2024/08/the-eatery-at-broward-hall-first-look`|
 | 5  | The Alligator    | Student opinions on the tent dining hall during Broward closure (Jan 2024) | `https://www.alligator.org/article/2024/01/broward-tent` |
@@ -36,6 +36,19 @@ UF campus dining experiences: student opinions and first-hand accounts about din
 | 12 | Reddit r/ufl     | Student thread  covering  late-night dining| `https://www.reddit.com/r/ufl/comments/jh2ikl/good_food_after_midnight/` |          
 ---
 
+## Architecture
+
+```mermaid
+flowchart LR
+    A["Ingestion\nmanual extraction, requests + bs4"] --> B["Chunking\ncustom strategy"]
+    B --> C["Embedding + Vector Store\nMiniLM-L6-v2 + ChromaDB"]
+    C --> D["Retrieval\nsemantic search"]
+    D --> E["Generation\nGroq llama-3.3-70b"]
+```
+
+
+---
+
 ## Chunking Strategy
 
 <!-- How will you split documents into chunks?
@@ -43,11 +56,11 @@ UF campus dining experiences: student opinions and first-hand accounts about din
      numbers fit the structure of your documents.
      A review-heavy corpus warrants different chunking than a long FAQ. -->
 
-**Chunk size:**
+**Chunk size:** 400–500 characters (roughly 100–125 tokens)
 
-**Overlap:**
+**Overlap:** 50 characters. Small because review documents are opinion units with no cross-boundary dependencies; overlap mainly helps when splitting long Alligator article paragraphs
 
-**Reasoning:**
+**Reasoning:** The corpus is dominated by individual review snippets where the meaningful unit is one person's complete verdict on one location. Splitting mid-review destroys the location+opinion pairing retrieval depends on. 400–500 chars preserves most reviews as whole chunks while staying well under all-MiniLM-L6-v2's 256-token ceiling. Overlap is intentionally small because review documents have no cross-boundary dependencies; it only helps when splitting longer Alligator article paragraphs. Split order: review/comment boundaries first, then paragraph breaks (Alligator, Spoon University), then character limit with overlap as a fallback for long prose (Reddit meal plan post).
 
 ---
 

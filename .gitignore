@@ -22,3 +22,8 @@ chroma/
 #scraped data and script
 scraper.py
 scraped.txt
+
+#debug data
+chunks_debug.json
+units_debug.json
+display_chunks_debug.py
